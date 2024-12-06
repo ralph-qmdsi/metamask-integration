@@ -1,0 +1,57 @@
+<head>
+  <!-- Import metamask sdk -->
+  <script src="https://c0f4f41c-2f55-4863-921b-sdk-docs.github.io/cdn/metamask-sdk.js"></script>
+  <script>
+    const options = {};
+    const MMSDK = new MetaMaskSDK.MetaMaskSDK(options);
+
+    MMSDK.connect();
+  </script>
+
+  <!-- Import web3.js -->
+  <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+
+  <script type="module">
+    const web3 = new Web3(window.ethereum);
+
+    async function connectWallet() {
+      if (window.ethereum) {
+        const accounts = await window.ethereum.request({
+          method: 'eth_requestAccounts',
+        });
+        const userWalletAddress = accounts[0];
+
+        return userWalletAddress;
+      } else {
+        console.error('MetaMask is not installed!');
+      }
+    }
+
+    async function fetchLatestBlockTransactions() {
+      try {
+        const userAddress = await connectWallet();
+
+        // Fetch the latest block with full transactions
+        const latestBlock = await web3.eth.getBlock('latest', true);
+
+        if (!(latestBlock && latestBlock.transactions))
+          throw new Error('No transactions found in the latest block.');
+
+        // Filter transactions involving the user's address
+        const userTransactions = latestBlock.transactions.filter(
+          tx =>
+            tx.from.toLowerCase() === userAddress.toLowerCase() ||
+            tx.to?.toLowerCase() === userAddress.toLowerCase()
+        );
+
+        console.log("User's Transactions in Latest Block:", userTransactions);
+
+        return userTransactions;
+      } catch (error) {
+        console.error('Error fetching transactions:', error);
+      }
+    }
+
+    fetchLatestBlockTransactions();
+  </script>
+</head>
